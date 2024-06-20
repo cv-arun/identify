@@ -2,13 +2,13 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-const PORT = process.env.PORT
+const deoteenv = require('dotenv').config()
+const PORT = process.env.PORT || 4000
 import errorHandler from './middlewares/errorHandler';
 import mainRouter from './routes/identity';
 import sequelize from './config/db';
 
-dotenv.config()
+
 const app = express()
 
 

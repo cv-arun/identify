@@ -4,7 +4,7 @@ const FILE_NAME = 'controllers/users.js';
 import User from '../models/user.model';
 
 
-exports.addData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const addData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
 
         res.status(200).send({ message: 'Data added successfully' });
@@ -13,3 +13,16 @@ exports.addData = async (req: Request, res: Response, next: NextFunction): Promi
         next(error);
     }
 };
+
+export const getData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+
+        let response = await User.findAndCountAll();
+
+        res.status(200).send({ message: 'Data added successfully',response });
+    } catch (error) {
+        logger(FILE_NAME, "[Error]", { error });
+        next(error);
+    }
+};
+
