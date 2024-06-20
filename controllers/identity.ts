@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 const FILE_NAME = 'controllers/users.js';
-import User from '../models/user.model';
+import Contact from '../models/contact.model';
 
 
 export const addData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -17,7 +17,7 @@ export const addData = async (req: Request, res: Response, next: NextFunction): 
 export const getData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
 
-        let response = await User.findAndCountAll();
+        let response = await Contact.findAndCountAll();
 
         res.status(200).send({ message: 'Data added successfully',response });
     } catch (error) {

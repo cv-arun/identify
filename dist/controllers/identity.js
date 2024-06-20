@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getData = exports.addData = void 0;
 const logger_1 = __importDefault(require("../utils/logger"));
 const FILE_NAME = 'controllers/users.js';
-const user_model_1 = __importDefault(require("../models/user.model"));
+const contact_model_1 = __importDefault(require("../models/contact.model"));
 const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.status(200).send({ message: 'Data added successfully' });
@@ -28,7 +28,7 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 exports.addData = addData;
 const getData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let response = yield user_model_1.default.findAndCountAll();
+        let response = yield contact_model_1.default.findAndCountAll();
         res.status(200).send({ message: 'Data added successfully', response });
     }
     catch (error) {
