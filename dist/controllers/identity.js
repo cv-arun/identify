@@ -12,28 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getData = exports.addData = void 0;
-const logger_1 = __importDefault(require("../utils/logger"));
+exports.addData = void 0;
 const FILE_NAME = 'controllers/users.js';
 const contact_model_1 = __importDefault(require("../models/contact.model"));
 const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        res.status(200).send({ message: 'Data added successfully' });
+        const linkPrecedence = 'primary';
+        let linkedId;
+        yield contact_model_1.default.create({ email: req.body.email, phoneNumber: req.body.phoneNumber, linkPrecedence: linkPrecedence, linkedId: linkedId });
+        res.status(200).json({ message: 'Data added successfully' });
     }
     catch (error) {
-        (0, logger_1.default)(FILE_NAME, "[Error]", { error });
+        // logger(FILE_NAME, "[Error]", { error });
+        console.log(error, "error");
         next(error);
     }
 });
 exports.addData = addData;
-const getData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let response = yield contact_model_1.default.findAndCountAll();
-        res.status(200).send({ message: 'Data added successfully', response });
-    }
-    catch (error) {
-        (0, logger_1.default)(FILE_NAME, "[Error]", { error });
-        next(error);
-    }
-});
-exports.getData = getData;

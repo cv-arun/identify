@@ -2,9 +2,10 @@
 
 import express from 'express';
 const router = express.Router();
-import { getData } from '../controllers/identity';
+import { addData } from '../controllers/identity';
 
-router.get('/', getData);
+router.post('/', addData);
+
 
 
 export default router

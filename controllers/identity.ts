@@ -7,22 +7,15 @@ import Contact from '../models/contact.model';
 export const addData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
 
-        res.status(200).send({ message: 'Data added successfully' });
+    const linkPrecedence= 'primary'
+    let linkedId 
+    await Contact.create({email:req.body.email,phoneNumber:req.body.phoneNumber,linkPrecedence:linkPrecedence,linkedId:linkedId})
+        res.status(200).json({ message: 'Data added successfully' });
     } catch (error) {
-        logger(FILE_NAME, "[Error]", { error });
+        // logger(FILE_NAME, "[Error]", { error });
+        console.log(error, "error")
         next(error);
     }
 };
 
-export const getData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-
-        let response = await Contact.findAndCountAll();
-
-        res.status(200).send({ message: 'Data added successfully',response });
-    } catch (error) {
-        logger(FILE_NAME, "[Error]", { error });
-        next(error);
-    }
-};
 
