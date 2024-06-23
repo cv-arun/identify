@@ -15,15 +15,14 @@ const uniqueArray = (array: string[]): string[] => { //function to remove duplic
     return Array.from(mySet);
 }
 
-export const generateResponse = async (primaryId: number, { email, phoneNumber }: { email?: string, phoneNumber?: string }): Promise<responseFormat> => {
+export const generateResponse = async (primaryId: number): Promise<responseFormat> => {
     //function to fetch secondary contacts and create response to send
     try {
-
+        const primaryContacts = await Contact.findByPk(primaryId, { attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] })
         const secondaryContacts = await Contact.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] });
-        console.log(secondaryContacts, "secondary contacts")
         let secondaryContactsIds = [], emailArray = [], phoneNumberArray = [];
-        if (email) emailArray.push(email) //adding primary email and phoneNumber
-        if (phoneNumber) phoneNumberArray.push(phoneNumber)
+        if (primaryContacts?.email) emailArray.push(primaryContacts?.email) //adding primary email and phoneNumber
+        if (primaryContacts?.phoneNumber) phoneNumberArray.push(primaryContacts?.phoneNumber)
         for (let contact of secondaryContacts) {
             secondaryContactsIds.push(contact.id)
             contact.email && emailArray.push(contact.email)

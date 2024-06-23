@@ -27,20 +27,17 @@ export const addData = async (req: Request, res: Response, next: NextFunction): 
         if (!alreadyExist) {
             console.log('inside already exist')
             if (email && phoneNumber) {
-                const alreadyExistEmailOrPhone = await Contact.findAll({ where: { [Op.or]: [{ email }, { phoneNumber }] }, order: [['createdAt', 'ASC']] })
+                const alreadyExistEmailOrPhone = await Contact.findAll({ where: { [Op.or]: [{ email }, { phoneNumber }] },attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] , order: [['createdAt', 'ASC']] })
                 if (alreadyExistEmailOrPhone?.length) {
-                    console.log('inside already exist email or phone', alreadyExistEmailOrPhone)
+                    const firstRecord = alreadyExistEmailOrPhone[0]
+                    const secondRecord = alreadyExistEmailOrPhone[1]
+                    const primaryId = firstRecord.linkPrecedence === 'primary' ? firstRecord.id : firstRecord.linkedId
 
-                    const secondary = alreadyExistEmailOrPhone[1]
-                    const primary = alreadyExistEmailOrPhone[0]
-                    await Contact.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primary.id });
-                    secondary && await Contact.update({ linkedId: primary.id, linkPrecedence: 'secondary' }, { where: { id: secondary.id } })
-                    let primaryEmail = primary?.email && primary?.email
-                    let primaryPhoneNumber = primary?.phoneNumber && primary?.phoneNumber
-                    contact = await generateResponse(primary.id, { email: primaryEmail, phoneNumber: primaryPhoneNumber })
+                    await Contact.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primaryId });
+                    secondRecord && await Contact.update({ linkedId: secondRecord.id, linkPrecedence: 'secondary' }, { where: { id: secondRecord.id } })
+                    contact = primaryId && await generateResponse(primaryId)
 
                 } else {
-                    console.log('inside already exist email or phone else')
 
                     let newContact = await Contact.create({ ...findQuery, linkPrecedence: 'primary' });
                     contact = {
@@ -62,20 +59,8 @@ export const addData = async (req: Request, res: Response, next: NextFunction): 
             }
 
         } else {
-            let primaryId: number = 0
-            let primaryEmail, primaryPhoneNumber
-            if (alreadyExist.linkPrecedence === 'primary') {
-                primaryId = alreadyExist.id
-                primaryEmail = alreadyExist?.email && alreadyExist?.email
-                primaryPhoneNumber = alreadyExist?.phoneNumber && alreadyExist?.phoneNumber
-            } else if (alreadyExist.linkedId) {
-                primaryId = alreadyExist.linkedId
-                let primary = await Contact.findByPk(primaryId)
-                primaryEmail = primary?.email && primary?.email
-                primaryPhoneNumber = primary?.phoneNumber && primary?.phoneNumber
-            }
-
-            contact = await generateResponse(primaryId, { email: primaryEmail, phoneNumber: primaryPhoneNumber })
+            const primaryId = alreadyExist.linkPrecedence === 'primary' ? alreadyExist.id : alreadyExist.linkedId
+            contact = primaryId && await generateResponse(primaryId)
         }
 
         res.status(200).json({ contact });

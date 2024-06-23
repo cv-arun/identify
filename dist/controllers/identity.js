@@ -39,19 +39,16 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         if (!alreadyExist) {
             console.log('inside already exist');
             if (email && phoneNumber) {
-                const alreadyExistEmailOrPhone = yield contact_model_1.default.findAll({ where: { [sequelize_1.Op.or]: [{ email }, { phoneNumber }] }, order: [['createdAt', 'ASC']] });
+                const alreadyExistEmailOrPhone = yield contact_model_1.default.findAll({ where: { [sequelize_1.Op.or]: [{ email }, { phoneNumber }] }, attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'], order: [['createdAt', 'ASC']] });
                 if (alreadyExistEmailOrPhone === null || alreadyExistEmailOrPhone === void 0 ? void 0 : alreadyExistEmailOrPhone.length) {
-                    console.log('inside already exist email or phone', alreadyExistEmailOrPhone);
-                    const secondary = alreadyExistEmailOrPhone[1];
-                    const primary = alreadyExistEmailOrPhone[0];
-                    yield contact_model_1.default.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primary.id });
-                    secondary && (yield contact_model_1.default.update({ linkedId: primary.id, linkPrecedence: 'secondary' }, { where: { id: secondary.id } }));
-                    let primaryEmail = (primary === null || primary === void 0 ? void 0 : primary.email) && (primary === null || primary === void 0 ? void 0 : primary.email);
-                    let primaryPhoneNumber = (primary === null || primary === void 0 ? void 0 : primary.phoneNumber) && (primary === null || primary === void 0 ? void 0 : primary.phoneNumber);
-                    contact = yield (0, generateResponse_1.generateResponse)(primary.id, { email: primaryEmail, phoneNumber: primaryPhoneNumber });
+                    const firstRecord = alreadyExistEmailOrPhone[0];
+                    const secondRecord = alreadyExistEmailOrPhone[1];
+                    const primaryId = firstRecord.linkPrecedence === 'primary' ? firstRecord.id : firstRecord.linkedId;
+                    yield contact_model_1.default.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primaryId });
+                    secondRecord && (yield contact_model_1.default.update({ linkedId: secondRecord.id, linkPrecedence: 'secondary' }, { where: { id: secondRecord.id } }));
+                    contact = primaryId && (yield (0, generateResponse_1.generateResponse)(primaryId));
                 }
                 else {
-                    console.log('inside already exist email or phone else');
                     let newContact = yield contact_model_1.default.create(Object.assign(Object.assign({}, findQuery), { linkPrecedence: 'primary' }));
                     contact = {
                         primaryContactid: newContact.id,
@@ -72,20 +69,8 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         else {
-            let primaryId = 0;
-            let primaryEmail, primaryPhoneNumber;
-            if (alreadyExist.linkPrecedence === 'primary') {
-                primaryId = alreadyExist.id;
-                primaryEmail = (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.email) && (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.email);
-                primaryPhoneNumber = (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.phoneNumber) && (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.phoneNumber);
-            }
-            else if (alreadyExist.linkedId) {
-                primaryId = alreadyExist.linkedId;
-                let primary = yield contact_model_1.default.findByPk(primaryId);
-                primaryEmail = (primary === null || primary === void 0 ? void 0 : primary.email) && (primary === null || primary === void 0 ? void 0 : primary.email);
-                primaryPhoneNumber = (primary === null || primary === void 0 ? void 0 : primary.phoneNumber) && (primary === null || primary === void 0 ? void 0 : primary.phoneNumber);
-            }
-            contact = yield (0, generateResponse_1.generateResponse)(primaryId, { email: primaryEmail, phoneNumber: primaryPhoneNumber });
+            const primaryId = alreadyExist.linkPrecedence === 'primary' ? alreadyExist.id : alreadyExist.linkedId;
+            contact = primaryId && (yield (0, generateResponse_1.generateResponse)(primaryId));
         }
         res.status(200).json({ contact });
     }

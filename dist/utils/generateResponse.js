@@ -20,16 +20,16 @@ const uniqueArray = (array) => {
     const mySet = new Set(array);
     return Array.from(mySet);
 };
-const generateResponse = (primaryId_1, _a) => __awaiter(void 0, [primaryId_1, _a], void 0, function* (primaryId, { email, phoneNumber }) {
+const generateResponse = (primaryId) => __awaiter(void 0, void 0, void 0, function* () {
     //function to fetch secondary contacts and create response to send
     try {
+        const primaryContacts = yield contact_model_1.default.findByPk(primaryId, { attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] });
         const secondaryContacts = yield contact_model_1.default.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] });
-        console.log(secondaryContacts, "secondary contacts");
         let secondaryContactsIds = [], emailArray = [], phoneNumberArray = [];
-        if (email)
-            emailArray.push(email); //adding primary email and phoneNumber
-        if (phoneNumber)
-            phoneNumberArray.push(phoneNumber);
+        if (primaryContacts === null || primaryContacts === void 0 ? void 0 : primaryContacts.email)
+            emailArray.push(primaryContacts === null || primaryContacts === void 0 ? void 0 : primaryContacts.email); //adding primary email and phoneNumber
+        if (primaryContacts === null || primaryContacts === void 0 ? void 0 : primaryContacts.phoneNumber)
+            phoneNumberArray.push(primaryContacts === null || primaryContacts === void 0 ? void 0 : primaryContacts.phoneNumber);
         for (let contact of secondaryContacts) {
             secondaryContactsIds.push(contact.id);
             contact.email && emailArray.push(contact.email);
