@@ -36,6 +36,17 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         const alreadyExist = yield contact_model_1.default.findOne({ where: findQuery, attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] });
         if (!alreadyExist) {
             // await Contact.create({...findQuery, linkPrecedence: 'primary'})
+            if (email && phoneNumber) {
+            }
+            else {
+                let newContact = yield contact_model_1.default.create(Object.assign(Object.assign({}, findQuery), { linkPrecedence: 'primary' }));
+                contact = {
+                    primaryContactid: newContact.id,
+                    emails: email ? [email] : [],
+                    phoneNumbers: phoneNumber ? [phoneNumber] : [],
+                    secondaryContactIds: []
+                };
+            }
         }
         else {
             let primaryId;
