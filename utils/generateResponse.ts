@@ -10,11 +10,17 @@ interface responseFormat {
     secondaryContactIds: number[]
 }
 
+const uniqueArray = (array: string[]): string[] => { //function to remove duplicate values
+    const mySet = new Set(array);
+    return Array.from(mySet);
+}
+
 export const generateResponse = async (primaryId: number, { email, phoneNumber }: { email?: string, phoneNumber?: string }): Promise<responseFormat> => {
-    //fetching secondary contacts and creating response to send
+    //function to fetch secondary contacts and create response to send
     try {
 
         const secondaryContacts = await Contact.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] });
+        console.log(secondaryContacts, "secondary contacts")
         let secondaryContactsIds = [], emailArray = [], phoneNumberArray = [];
         if (email) emailArray.push(email) //adding primary email and phoneNumber
         if (phoneNumber) phoneNumberArray.push(phoneNumber)
@@ -26,8 +32,8 @@ export const generateResponse = async (primaryId: number, { email, phoneNumber }
 
         return {
             primaryContactid: primaryId,
-            emails: emailArray,
-            phoneNumbers: phoneNumberArray,
+            emails: uniqueArray(emailArray),
+            phoneNumbers: uniqueArray(phoneNumberArray),
             secondaryContactIds: secondaryContactsIds
         }
 

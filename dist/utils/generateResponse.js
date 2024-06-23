@@ -16,10 +16,15 @@ exports.generateResponse = void 0;
 const logger_1 = __importDefault(require("./logger"));
 const contact_model_1 = __importDefault(require("../models/contact.model"));
 const FILE_NAME = 'utils/generateResponse.js';
+const uniqueArray = (array) => {
+    const mySet = new Set(array);
+    return Array.from(mySet);
+};
 const generateResponse = (primaryId_1, _a) => __awaiter(void 0, [primaryId_1, _a], void 0, function* (primaryId, { email, phoneNumber }) {
-    //fetching secondary contacts and creating response to send
+    //function to fetch secondary contacts and create response to send
     try {
         const secondaryContacts = yield contact_model_1.default.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] });
+        console.log(secondaryContacts, "secondary contacts");
         let secondaryContactsIds = [], emailArray = [], phoneNumberArray = [];
         if (email)
             emailArray.push(email); //adding primary email and phoneNumber
@@ -32,8 +37,8 @@ const generateResponse = (primaryId_1, _a) => __awaiter(void 0, [primaryId_1, _a
         }
         return {
             primaryContactid: primaryId,
-            emails: emailArray,
-            phoneNumbers: phoneNumberArray,
+            emails: uniqueArray(emailArray),
+            phoneNumbers: uniqueArray(phoneNumberArray),
             secondaryContactIds: secondaryContactsIds
         };
     }

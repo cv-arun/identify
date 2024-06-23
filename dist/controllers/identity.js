@@ -17,7 +17,7 @@ const logger_1 = __importDefault(require("../utils/logger"));
 const contact_model_1 = __importDefault(require("../models/contact.model"));
 const sequelize_1 = require("sequelize");
 const generateResponse_1 = require("../utils/generateResponse");
-const FILE_NAME = 'controllers/users.js';
+const FILE_NAME = 'controllers/identity.js';
 const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, phoneNumber } = req.body;
@@ -37,16 +37,21 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         }
         const alreadyExist = yield contact_model_1.default.findOne({ where: findQuery, attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] });
         if (!alreadyExist) {
+            console.log('inside already exist');
             if (email && phoneNumber) {
                 const alreadyExistEmailOrPhone = yield contact_model_1.default.findAll({ where: { [sequelize_1.Op.or]: [{ email }, { phoneNumber }] }, order: [['createdAt', 'ASC']] });
-                if (alreadyExistEmailOrPhone) {
+                if (alreadyExistEmailOrPhone === null || alreadyExistEmailOrPhone === void 0 ? void 0 : alreadyExistEmailOrPhone.length) {
+                    console.log('inside already exist email or phone', alreadyExistEmailOrPhone);
                     const secondary = alreadyExistEmailOrPhone[1];
                     const primary = alreadyExistEmailOrPhone[0];
                     yield contact_model_1.default.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primary.id });
                     secondary && (yield contact_model_1.default.update({ linkedId: primary.id, linkPrecedence: 'secondary' }, { where: { id: secondary.id } }));
-                    contact = yield (0, generateResponse_1.generateResponse)(primary.id, { email, phoneNumber });
+                    let primaryEmail = (primary === null || primary === void 0 ? void 0 : primary.email) && (primary === null || primary === void 0 ? void 0 : primary.email);
+                    let primaryPhoneNumber = (primary === null || primary === void 0 ? void 0 : primary.phoneNumber) && (primary === null || primary === void 0 ? void 0 : primary.phoneNumber);
+                    contact = yield (0, generateResponse_1.generateResponse)(primary.id, { email: primaryEmail, phoneNumber: primaryPhoneNumber });
                 }
                 else {
+                    console.log('inside already exist email or phone else');
                     let newContact = yield contact_model_1.default.create(Object.assign(Object.assign({}, findQuery), { linkPrecedence: 'primary' }));
                     contact = {
                         primaryContactid: newContact.id,
@@ -71,6 +76,8 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             let primaryEmail, primaryPhoneNumber;
             if (alreadyExist.linkPrecedence === 'primary') {
                 primaryId = alreadyExist.id;
+                primaryEmail = (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.email) && (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.email);
+                primaryPhoneNumber = (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.phoneNumber) && (alreadyExist === null || alreadyExist === void 0 ? void 0 : alreadyExist.phoneNumber);
             }
             else if (alreadyExist.linkedId) {
                 primaryId = alreadyExist.linkedId;
