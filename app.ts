@@ -1,6 +1,6 @@
 "use strict";
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 const deoteenv = require('dotenv').config()
 const PORT = process.env.PORT || 4000

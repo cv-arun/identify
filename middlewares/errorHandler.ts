@@ -1,6 +1,6 @@
 
 import { Request, Response, NextFunction } from 'express';
-const { logger } = require('../utils/logger');
+import  logger  from '../utils/logger';
 const FILE_NAME = "middleware/errorHandler.js";
 
 
@@ -12,7 +12,7 @@ interface CustomError extends Error {
 function errorHandler(error: CustomError, req: Request, res: Response, next: NextFunction): void {
     let { status = 500, message, data } = error;
 
-    logger(res?.locals?.reqId, FILE_NAME, "[Error]", error);
+    logger( FILE_NAME, "[Error]", error);
 
     // If status code is 500 - change the message to Internal server error
     message = status === 500 || !message ? 'Internal server error' : message;
