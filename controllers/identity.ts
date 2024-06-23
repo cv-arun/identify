@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
-const FILE_NAME = 'controllers/users.js';
 import Contact from '../models/contact.model';
+import { Op } from 'sequelize';
+import { generateResponse } from '../utils/generateResponse';
 
+const FILE_NAME = 'controllers/users.js';
 
 export const addData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -23,43 +25,50 @@ export const addData = async (req: Request, res: Response, next: NextFunction): 
         const alreadyExist = await Contact.findOne({ where: findQuery, attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] });
 
         if (!alreadyExist) {
-            // await Contact.create({...findQuery, linkPrecedence: 'primary'})
             if (email && phoneNumber) {
+                const alreadyExistEmailOrPhone = await Contact.findAll({ where: { [Op.or]: [{ email }, { phoneNumber }] }, order: [['createdAt', 'ASC']] })
+                if (alreadyExistEmailOrPhone) {
 
-            }else{
-              let newContact = await Contact.create({...findQuery, linkPrecedence: 'primary'});
-              contact = {
-                primaryContactid: newContact.id,
-                emails: email ? [email]: [],
-                phoneNumbers: phoneNumber ? [phoneNumber]: [],
-                secondaryContactIds: []
-            }
+                    const secondary = alreadyExistEmailOrPhone[1]
+                    const primary = alreadyExistEmailOrPhone[0]
+                    await Contact.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primary.id });
+                    secondary && await Contact.update({ linkedId: primary.id, linkPrecedence: 'secondary' }, { where: { id: secondary.id } })
+                    contact = await generateResponse(primary.id, { email, phoneNumber })
+
+                } else {
+
+                    let newContact = await Contact.create({ ...findQuery, linkPrecedence: 'primary' });
+                    contact = {
+                        primaryContactid: newContact.id,
+                        emails: [email],
+                        phoneNumbers: [phoneNumber],
+                        secondaryContactIds: []
+                    }
+                }
+
+            } else {
+                let newContact = await Contact.create({ ...findQuery, linkPrecedence: 'primary' });
+                contact = {
+                    primaryContactid: newContact.id,
+                    emails: email ? [email] : [],
+                    phoneNumbers: phoneNumber ? [phoneNumber] : [],
+                    secondaryContactIds: []
+                }
             }
 
         } else {
-            let primaryId
-            let emailArray = [], phoneNumberArray = [], secondaryContactsIds = []
+            let primaryId: number = 0
+            let primaryEmail, primaryPhoneNumber
             if (alreadyExist.linkPrecedence === 'primary') {
                 primaryId = alreadyExist.id
-            } else {
+            } else if (alreadyExist.linkedId) {
                 primaryId = alreadyExist.linkedId
                 let primary = await Contact.findByPk(primaryId)
-                primary?.email && emailArray.push(primary?.email)
-                primary?.phoneNumber && phoneNumberArray.push(primary?.phoneNumber)
+                primaryEmail = primary?.email && primary?.email
+                primaryPhoneNumber = primary?.phoneNumber && primary?.phoneNumber
             }
 
-            const secondaryContacts = await Contact.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] })
-            for (let contact of secondaryContacts) {
-                secondaryContactsIds.push(contact.id)
-                contact.email && emailArray.push(contact.email)
-                contact.phoneNumber && phoneNumberArray.push(contact.phoneNumber)
-            }
-            contact = {
-                primaryContactid: primaryId,
-                emails: emailArray,
-                phoneNumbers: phoneNumberArray,
-                secondaryContactIds: secondaryContactsIds
-            }
+            contact = await generateResponse(primaryId, { email: primaryEmail, phoneNumber: primaryPhoneNumber })
         }
 
         res.status(200).json({ contact });

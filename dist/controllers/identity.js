@@ -14,8 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addData = void 0;
 const logger_1 = __importDefault(require("../utils/logger"));
-const FILE_NAME = 'controllers/users.js';
 const contact_model_1 = __importDefault(require("../models/contact.model"));
+const sequelize_1 = require("sequelize");
+const generateResponse_1 = require("../utils/generateResponse");
+const FILE_NAME = 'controllers/users.js';
 const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, phoneNumber } = req.body;
@@ -35,8 +37,24 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         }
         const alreadyExist = yield contact_model_1.default.findOne({ where: findQuery, attributes: ['id', 'email', 'phoneNumber', 'linkPrecedence', 'linkedId'] });
         if (!alreadyExist) {
-            // await Contact.create({...findQuery, linkPrecedence: 'primary'})
             if (email && phoneNumber) {
+                const alreadyExistEmailOrPhone = yield contact_model_1.default.findAll({ where: { [sequelize_1.Op.or]: [{ email }, { phoneNumber }] }, order: [['createdAt', 'ASC']] });
+                if (alreadyExistEmailOrPhone) {
+                    const secondary = alreadyExistEmailOrPhone[1];
+                    const primary = alreadyExistEmailOrPhone[0];
+                    yield contact_model_1.default.create({ email, phoneNumber, linkPrecedence: 'secondary', linkedId: primary.id });
+                    secondary && (yield contact_model_1.default.update({ linkedId: primary.id, linkPrecedence: 'secondary' }, { where: { id: secondary.id } }));
+                    contact = yield (0, generateResponse_1.generateResponse)(primary.id, { email, phoneNumber });
+                }
+                else {
+                    let newContact = yield contact_model_1.default.create(Object.assign(Object.assign({}, findQuery), { linkPrecedence: 'primary' }));
+                    contact = {
+                        primaryContactid: newContact.id,
+                        emails: [email],
+                        phoneNumbers: [phoneNumber],
+                        secondaryContactIds: []
+                    };
+                }
             }
             else {
                 let newContact = yield contact_model_1.default.create(Object.assign(Object.assign({}, findQuery), { linkPrecedence: 'primary' }));
@@ -49,29 +67,18 @@ const addData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         else {
-            let primaryId;
-            let emailArray = [], phoneNumberArray = [], secondaryContactsIds = [];
+            let primaryId = 0;
+            let primaryEmail, primaryPhoneNumber;
             if (alreadyExist.linkPrecedence === 'primary') {
                 primaryId = alreadyExist.id;
             }
-            else {
+            else if (alreadyExist.linkedId) {
                 primaryId = alreadyExist.linkedId;
                 let primary = yield contact_model_1.default.findByPk(primaryId);
-                (primary === null || primary === void 0 ? void 0 : primary.email) && emailArray.push(primary === null || primary === void 0 ? void 0 : primary.email);
-                (primary === null || primary === void 0 ? void 0 : primary.phoneNumber) && phoneNumberArray.push(primary === null || primary === void 0 ? void 0 : primary.phoneNumber);
+                primaryEmail = (primary === null || primary === void 0 ? void 0 : primary.email) && (primary === null || primary === void 0 ? void 0 : primary.email);
+                primaryPhoneNumber = (primary === null || primary === void 0 ? void 0 : primary.phoneNumber) && (primary === null || primary === void 0 ? void 0 : primary.phoneNumber);
             }
-            const secondaryContacts = yield contact_model_1.default.findAll({ where: { linkedId: primaryId }, attributes: ['id', 'email', 'phoneNumber'] });
-            for (let contact of secondaryContacts) {
-                secondaryContactsIds.push(contact.id);
-                contact.email && emailArray.push(contact.email);
-                contact.phoneNumber && phoneNumberArray.push(contact.phoneNumber);
-            }
-            contact = {
-                primaryContactid: primaryId,
-                emails: emailArray,
-                phoneNumbers: phoneNumberArray,
-                secondaryContactIds: secondaryContactsIds
-            };
+            contact = yield (0, generateResponse_1.generateResponse)(primaryId, { email: primaryEmail, phoneNumber: primaryPhoneNumber });
         }
         res.status(200).json({ contact });
     }
