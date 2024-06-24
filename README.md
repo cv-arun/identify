@@ -1,5 +1,22 @@
 # identify
 
+### Exposed end point
+``https://identify-20wa.onrender.com/identify``
+
+
+### curl
+` curl --location 'https://identify-20wa.onrender.com/identify' \
+--data-raw '{
+"email": "cv@email.com",
+"phoneNumber": "9207866458"
+}'
+`
+
+
+
+
+
+
 # <h3>How to start</h3>
 1 clone the repo <br/>
 2 npm install <br/>
