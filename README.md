@@ -1,6 +1,6 @@
 # identify
 
-### Exposed end point
+### Hosted end point
 ``https://identify-20wa.onrender.com/identify``
 
 
