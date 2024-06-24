@@ -1,6 +1,6 @@
 "use strict";
 
-import express from 'express';
+import express,{Request,Response} from 'express';
 import cors from 'cors';
 const deoteenv = require('dotenv').config()
 const PORT = process.env.PORT || 4000
@@ -17,6 +17,8 @@ app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 
 app.use('/identify', mainRouter)
+app.use('/health', (req:Request,res:Response)=>res.status(200).json({message:'Server is running'}))
+
 app.use(errorHandler)
 
 
