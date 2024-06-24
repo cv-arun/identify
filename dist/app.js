@@ -15,6 +15,7 @@ app.use((0, cors_1.default)({ origin: '*' }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use('/identify', identity_1.default);
+app.use('/health', (req, res) => res.status(200).json({ message: 'Server is running' }));
 app.use(errorHandler_1.default);
 db_1.default.sync({ force: false }).then(() => {
     console.log('Tables synced successfully!');
